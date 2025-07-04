@@ -175,8 +175,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📧 Contact
 
-Built by [Your Name] as a code sample for the MLH Fellowship application.
+**Built by Pranav Varshney** for the MLH Fellowship Application
+
+- 📧 Email: pranav.varshney@gmail.com
+- 💼 LinkedIn: [Connect with me](https://linkedin.com/in/pranav-varshney)
+- 🐙 GitHub: [View more projects](https://github.com/pranavarshney)
 
 ---
 
-*This project demonstrates full-stack development skills including backend API development, database design, frontend user interface, authentication systems, and responsive design principles.*
+*This project demonstrates full-stack development skills including backend API development, database design, frontend user interface, authentication systems, and responsive design principles. Created specifically as a code sample for the MLH Fellowship program.*

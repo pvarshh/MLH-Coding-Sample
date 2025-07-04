@@ -1,7 +1,7 @@
 {
-  "name": "fitness-tracker",
+  "name": "personal-fitness-tracker",
   "version": "1.0.0",
-  "description": "A personal fitness tracking web application",
+  "description": "A comprehensive web application for tracking personal fitness activities, workouts, and progress - MLH Fellowship Code Sample",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,9 +9,28 @@
     "test": "jest",
     "seed": "node seed.js"
   },
-  "keywords": ["fitness", "tracking", "health", "workouts"],
-  "author": "Your Name",
+  "keywords": [
+    "fitness",
+    "tracking",
+    "health",
+    "workouts",
+    "goals",
+    "progress",
+    "web-application",
+    "nodejs",
+    "express",
+    "mlh-fellowship"
+  ],
+  "author": "Pranav Varshney <pranav.varshney@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/fitness-tracker-mlh.git"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
