@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Fitness Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="loading-screen">
+            <div class="loader">
+                <i class="fas fa-dumbbell"></i>
+                <p>Loading Fitness Tracker...</p>
+            </div>
+        </div>
+
+        <!-- Login/Register Screen -->
+        <div id="auth-screen" class="auth-screen hidden">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h1><i class="fas fa-dumbbell"></i> Fitness Tracker</h1>
+                    <p>Track your workouts, set goals, and monitor your progress</p>
+                </div>
+
+                <div class="auth-tabs">
+                    <button id="login-tab" class="tab-button active" onclick="showLogin()">Login</button>
+                    <button id="register-tab" class="tab-button" onclick="showRegister()">Register</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="login-username">Username or Email</label>
+                        <input type="text" id="login-username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form hidden">
+                    <div class="form-group">
+                        <label for="register-username">Username</label>
+                        <input type="text" id="register-username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" name="password" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="main-app" class="main-app hidden">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1><i class="fas fa-dumbbell"></i> Fitness Tracker</h1>
+                </div>
+                <div class="header-right">
+                    <span id="user-welcome">Welcome, User!</span>
+                    <button id="logout-btn" class="btn btn-secondary">Logout</button>
+                </div>
+            </header>
+
+            <!-- Navigation -->
+            <nav class="nav">
+                <button class="nav-button active" data-section="dashboard">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </button>
+                <button class="nav-button" data-section="workouts">
+                    <i class="fas fa-dumbbell"></i> Workouts
+                </button>
+                <button class="nav-button" data-section="goals">
+                    <i class="fas fa-target"></i> Goals
+                </button>
+                <button class="nav-button" data-section="stats">
+                    <i class="fas fa-chart-bar"></i> Statistics
+                </button>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="section active">
+                    <h2>Dashboard</h2>
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <h3>Total Workouts</h3>
+                            <p class="stat-number" id="total-workouts">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>This Week</h3>
+                            <p class="stat-number" id="weekly-workouts">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Active Goals</h3>
+                            <p class="stat-number" id="active-goals">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Current Streak</h3>
+                            <p class="stat-number" id="current-streak">0</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-sections">
+                        <div class="recent-workouts">
+                            <h3>Recent Workouts</h3>
+                            <div id="recent-workouts-list" class="workout-list"></div>
+                        </div>
+                        <div class="goal-progress">
+                            <h3>Goal Progress</h3>
+                            <div id="goal-progress-list" class="goal-list"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Workouts Section -->
+                <section id="workouts" class="section">
+                    <div class="section-header">
+                        <h2>Workouts</h2>
+                        <button id="add-workout-btn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Workout
+                        </button>
+                    </div>
+                    <div id="workouts-list" class="workout-list"></div>
+                </section>
+
+                <!-- Goals Section -->
+                <section id="goals" class="section">
+                    <div class="section-header">
+                        <h2>Goals</h2>
+                        <button id="add-goal-btn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Goal
+                        </button>
+                    </div>
+                    <div id="goals-list" class="goal-list"></div>
+                </section>
+
+                <!-- Statistics Section -->
+                <section id="stats" class="section">
+                    <h2>Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="chart-container">
+                            <canvas id="monthly-chart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="exercise-chart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="workout-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="workout-modal-title">Add Workout</h2>
+            <form id="workout-form">
+                <div class="form-group">
+                    <label for="workout-name">Workout Name</label>
+                    <input type="text" id="workout-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="workout-date">Date</label>
+                    <input type="date" id="workout-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="workout-duration">Duration (minutes)</label>
+                    <input type="number" id="workout-duration" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="workout-notes">Notes</label>
+                    <textarea id="workout-notes" rows="3"></textarea>
+                </div>
+                <h3>Exercises</h3>
+                <div id="exercises-container"></div>
+                <button type="button" id="add-exercise-btn" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> Add Exercise
+                </button>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('workout-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Workout</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="goal-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="goal-modal-title">Add Goal</h2>
+            <form id="goal-form">
+                <div class="form-group">
+                    <label for="goal-title">Goal Title</label>
+                    <input type="text" id="goal-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="goal-description">Description</label>
+                    <textarea id="goal-description" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="goal-target">Target Value</label>
+                        <input type="number" id="goal-target" required min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="goal-unit">Unit</label>
+                        <select id="goal-unit" required>
+                            <option value="">Select unit</option>
+                            <option value="lbs">Pounds (lbs)</option>
+                            <option value="kg">Kilograms (kg)</option>
+                            <option value="reps">Repetitions</option>
+                            <option value="minutes">Minutes</option>
+                            <option value="miles">Miles</option>
+                            <option value="km">Kilometers</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="goal-current">Current Value</label>
+                    <input type="number" id="goal-current" min="0" step="0.1" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="goal-date">Target Date</label>
+                    <input type="date" id="goal-date">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('goal-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
