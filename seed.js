@@ -125,5 +125,4 @@ async function seedDatabase() {
     }
 }
 
-// Run the seeder
 seedDatabase();
