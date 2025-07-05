@@ -33,8 +33,30 @@ function initializeApp() {
         setTimeout(() => {
             loadingScreen.classList.add('hidden');
             authScreen.classList.remove('hidden');
-        }, 1500);
+        }, 2000); // Slightly longer for better UX
     }
+}
+
+// Show main app
+function showMainApp() {
+    loadingScreen.classList.add('hidden');
+    authScreen.classList.add('hidden');
+    mainApp.classList.remove('hidden');
+    
+    // Update welcome message with user's name
+    const welcomeMessages = [
+        `Hey ${currentUser.username}! 💪`,
+        `Welcome back, ${currentUser.username}! 🔥`,
+        `Ready to crush it, ${currentUser.username}? ⚡`,
+        `Let's go, ${currentUser.username}! 🚀`,
+        `Time to shine, ${currentUser.username}! ✨`
+    ];
+    
+    const randomWelcome = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+    userWelcome.textContent = randomWelcome;
+    
+    // Load dashboard data
+    loadDashboard();
 }
 
 // Setup event listeners
@@ -68,9 +90,15 @@ function setupEventListeners() {
         document.getElementById('goal-form').reset();
     });
 
+    document.getElementById('create-challenge-btn').addEventListener('click', () => {
+        showModal('challenge-modal');
+        document.getElementById('challenge-form').reset();
+    });
+
     // Forms
     document.getElementById('workout-form').addEventListener('submit', handleWorkoutSubmit);
     document.getElementById('goal-form').addEventListener('submit', handleGoalSubmit);
+    document.getElementById('challenge-form').addEventListener('submit', handleChallengeSubmit);
     document.getElementById('add-exercise-btn').addEventListener('click', addExerciseField);
 
     // Modal close buttons
@@ -86,6 +114,14 @@ function setupEventListeners() {
         if (e.target.classList.contains('modal')) {
             closeModal(e.target.id);
         }
+    });
+
+    // Ranking tabs
+    document.querySelectorAll('.ranking-tabs .tab-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const tabName = e.target.dataset.tab;
+            showRankingTab(tabName);
+        });
     });
 }
 
@@ -116,10 +152,10 @@ async function handleLogin(e) {
             localStorage.setItem('fitness_user', JSON.stringify(currentUser));
             showMainApp();
         } else {
-            showMessage(data.error, 'error');
+            showMessage(data.error || 'Hmm, something went wrong. Double-check your credentials!', 'error');
         }
     } catch (error) {
-        showMessage('Login failed. Please try again.', 'error');
+        showMessage('Oops! Connection issue. Please try again in a moment.', 'error');
     }
 }
 
@@ -150,10 +186,10 @@ async function handleRegister(e) {
             localStorage.setItem('fitness_user', JSON.stringify(currentUser));
             showMainApp();
         } else {
-            showMessage(data.error, 'error');
+            showMessage(data.error || 'Hmm, there was an issue creating your account. Try again!', 'error');
         }
     } catch (error) {
-        showMessage('Registration failed. Please try again.', 'error');
+        showMessage('Oops! Connection issue. Please try again in a moment.', 'error');
     }
 }
 
@@ -169,14 +205,6 @@ function handleLogout() {
 }
 
 // UI Helper functions
-function showMainApp() {
-    loadingScreen.classList.add('hidden');
-    authScreen.classList.add('hidden');
-    mainApp.classList.remove('hidden');
-    userWelcome.textContent = `Welcome, ${currentUser.username}!`;
-    loadDashboard();
-}
-
 function showLogin() {
     document.getElementById('login-tab').classList.add('active');
     document.getElementById('register-tab').classList.remove('active');
@@ -217,6 +245,9 @@ function showSection(sectionName) {
             break;
         case 'stats':
             loadStats();
+            break;
+        case 'rankings':
+            loadRankings();
             break;
     }
 }
@@ -752,3 +783,315 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('workout-date').value = today;
 });
+
+// Rankings functions
+async function loadRankings() {
+    try {
+        // Load user ranking profile
+        const profileData = await apiRequest('/api/rankings/profile');
+        displayUserRanking(profileData.ranking);
+
+        // Load initial tab (leaderboard)
+        showRankingTab('leaderboard');
+    } catch (error) {
+        console.error('Failed to load rankings:', error);
+    }
+}
+
+function displayUserRanking(ranking) {
+    document.getElementById('user-rank-tier').textContent = ranking.rank_tier;
+    document.getElementById('user-rank-tier').className = `rank-tier ${ranking.rank_tier.toLowerCase()}`;
+    document.getElementById('user-elo').textContent = ranking.elo_rating;
+    document.getElementById('user-position').textContent = `#${ranking.position}`;
+    document.getElementById('user-record').textContent = `${ranking.wins}/${ranking.losses}`;
+    document.getElementById('user-streak').textContent = ranking.current_streak;
+}
+
+function showRankingTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.ranking-tabs .tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+    // Update tab content
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+
+    // Load tab-specific data
+    switch(tabName) {
+        case 'leaderboard':
+            loadLeaderboard();
+            break;
+        case 'challenges':
+            loadChallenges();
+            break;
+        case 'stats':
+            loadRankingStats();
+            break;
+    }
+}
+
+async function loadLeaderboard() {
+    try {
+        const data = await apiRequest('/api/rankings/leaderboard');
+        displayLeaderboard(data.leaderboard);
+    } catch (error) {
+        console.error('Failed to load leaderboard:', error);
+    }
+}
+
+function displayLeaderboard(leaderboard) {
+    const container = document.getElementById('leaderboard-list');
+    
+    if (leaderboard.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-trophy"></i>
+                <h3>No rankings yet</h3>
+                <p>Be the first to compete in challenges!</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = leaderboard.map(user => {
+        const positionClass = user.position <= 3 ? `top-${user.position}` : '';
+        const initial = user.username.charAt(0).toUpperCase();
+        
+        return `
+            <div class="leaderboard-item">
+                <div class="leaderboard-position ${positionClass}">${user.position}</div>
+                <div class="leaderboard-user">
+                    <div class="leaderboard-avatar">${initial}</div>
+                    <div class="leaderboard-info">
+                        <h4>${user.username}</h4>
+                        <p><span class="rank-tier ${user.rank_tier.toLowerCase()}">${user.rank_tier}</span></p>
+                    </div>
+                </div>
+                <div class="leaderboard-stats">
+                    <div class="leaderboard-elo">${user.elo_rating}</div>
+                    <div class="leaderboard-record">${user.wins}W ${user.losses}L</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function loadChallenges() {
+    try {
+        const data = await apiRequest('/api/rankings/challenges');
+        displayChallenges(data.challenges);
+    } catch (error) {
+        console.error('Failed to load challenges:', error);
+    }
+}
+
+function displayChallenges(challenges) {
+    const container = document.getElementById('challenges-list');
+    
+    if (challenges.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-sword"></i>
+                <h3>No challenges yet</h3>
+                <p>Create your first challenge to start competing!</p>
+                <button class="btn btn-primary" onclick="document.getElementById('create-challenge-btn').click()">
+                    <i class="fas fa-plus"></i> Create Challenge
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = challenges.map(challenge => {
+        const isChallenger = challenge.challenger_id === currentUser.id;
+        const canRespond = !isChallenger && challenge.status === 'pending';
+        
+        return `
+            <div class="challenge-item ${challenge.status}">
+                <div class="challenge-header">
+                    <h4 class="challenge-title">${challenge.challenge_title}</h4>
+                    <span class="challenge-status ${challenge.status}">${challenge.status}</span>
+                </div>
+                <div class="challenge-details">
+                    <p>${challenge.challenge_description || 'No description provided'}</p>
+                    <p><strong>Type:</strong> ${formatChallengeType(challenge.challenge_type)}</p>
+                    <p><strong>Duration:</strong> ${challenge.duration_days} days</p>
+                    ${challenge.target_value ? `<p><strong>Target:</strong> ${challenge.target_value}</p>` : ''}
+                </div>
+                <div class="challenge-participants">
+                    <span><strong>${challenge.challenger_name}</strong></span>
+                    <span class="challenge-vs">VS</span>
+                    <span><strong>${challenge.challenged_name}</strong></span>
+                </div>
+                ${challenge.status === 'active' || challenge.status === 'completed' ? `
+                    <div class="challenge-progress">
+                        <div class="challenge-user-progress">
+                            <h5>${challenge.challenger_name}</h5>
+                            <div class="challenge-score">${challenge.challenger_result || 0}</div>
+                        </div>
+                        <div class="challenge-user-progress">
+                            <h5>${challenge.challenged_name}</h5>
+                            <div class="challenge-score">${challenge.challenged_result || 0}</div>
+                        </div>
+                    </div>
+                ` : ''}
+                ${challenge.status === 'completed' && challenge.winner_id ? `
+                    <div class="challenge-winner">
+                        <p><strong>Winner:</strong> ${challenge.winner_id === challenge.challenger_id ? challenge.challenger_name : challenge.challenged_name}</p>
+                    </div>
+                ` : ''}
+                <div class="challenge-actions">
+                    ${canRespond ? `
+                        <button class="btn btn-primary btn-small" onclick="respondToChallenge(${challenge.id}, 'accept')">
+                            <i class="fas fa-check"></i> Accept
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="respondToChallenge(${challenge.id}, 'decline')">
+                            <i class="fas fa-times"></i> Decline
+                        </button>
+                    ` : ''}
+                    ${challenge.status === 'active' ? `
+                        <button class="btn btn-secondary btn-small" onclick="completeChallenge(${challenge.id})">
+                            <i class="fas fa-flag-checkered"></i> Complete
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function loadRankingStats() {
+    try {
+        const data = await apiRequest('/api/rankings/stats');
+        displayRankingStats(data);
+    } catch (error) {
+        console.error('Failed to load ranking stats:', error);
+    }
+}
+
+function displayRankingStats(data) {
+    // Display rank distribution chart
+    const ctx = document.getElementById('rank-distribution-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.rankDistribution.map(r => r.rank_tier),
+            datasets: [{
+                data: data.rankDistribution.map(r => r.count),
+                backgroundColor: [
+                    '#cd7f32', // Bronze
+                    '#c0c0c0', // Silver
+                    '#ffd700', // Gold
+                    '#e5e4e2', // Platinum
+                    '#b9f2ff'  // Diamond
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Rank Distribution'
+                }
+            }
+        }
+    });
+
+    // Display top challengers
+    const container = document.getElementById('top-challengers-list');
+    container.innerHTML = data.topChallengers.map((user, index) => `
+        <div class="top-challenger-item">
+            <div class="top-challenger-info">
+                <span class="top-challenger-rank">${index + 1}</span>
+                <span><strong>${user.username}</strong></span>
+                <span class="rank-tier ${user.rank_tier.toLowerCase()}">${user.rank_tier}</span>
+            </div>
+            <div class="top-challenger-stats">
+                ${user.total_matches} matches • ${user.elo_rating} ELO
+            </div>
+        </div>
+    `).join('');
+}
+
+async function handleChallengeSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const challengeData = {
+        challenged_username: formData.get('username') || document.getElementById('challenge-username').value,
+        challenge_type: formData.get('type') || document.getElementById('challenge-type').value,
+        challenge_title: formData.get('title') || document.getElementById('challenge-title').value,
+        challenge_description: formData.get('description') || document.getElementById('challenge-description').value,
+        duration_days: parseInt(formData.get('duration') || document.getElementById('challenge-duration').value),
+        target_value: parseFloat(formData.get('target') || document.getElementById('challenge-target').value) || null
+    };
+
+    try {
+        await apiRequest('/api/rankings/challenge', {
+            method: 'POST',
+            body: JSON.stringify(challengeData)
+        });
+        
+        closeModal('challenge-modal');
+        alert('Challenge sent successfully!');
+        
+        // Refresh challenges if on challenges tab
+        if (document.getElementById('challenges-tab').classList.contains('active')) {
+            loadChallenges();
+        }
+    } catch (error) {
+        alert('Failed to create challenge: ' + error.message);
+    }
+}
+
+async function respondToChallenge(challengeId, response) {
+    try {
+        await apiRequest(`/api/rankings/challenge/${challengeId}/respond`, {
+            method: 'PUT',
+            body: JSON.stringify({ response })
+        });
+        
+        alert(response === 'accept' ? 'Challenge accepted!' : 'Challenge declined.');
+        loadChallenges();
+        
+        // Refresh user ranking
+        const profileData = await apiRequest('/api/rankings/profile');
+        displayUserRanking(profileData.ranking);
+    } catch (error) {
+        alert('Failed to respond to challenge: ' + error.message);
+    }
+}
+
+async function completeChallenge(challengeId) {
+    if (confirm('Complete this challenge? This will calculate final results and update ELO ratings.')) {
+        try {
+            const result = await apiRequest(`/api/rankings/challenge/${challengeId}/complete`, {
+                method: 'POST'
+            });
+            
+            alert('Challenge completed successfully!');
+            loadChallenges();
+            
+            // Refresh user ranking
+            const profileData = await apiRequest('/api/rankings/profile');
+            displayUserRanking(profileData.ranking);
+        } catch (error) {
+            alert('Failed to complete challenge: ' + error.message);
+        }
+    }
+}
+
+function formatChallengeType(type) {
+    const types = {
+        'workout_count': 'Most Workouts',
+        'total_reps': 'Most Reps',
+        'duration': 'Most Minutes',
+        'weight_lifted': 'Most Weight Lifted'
+    };
+    return types[type] || type;
+}
