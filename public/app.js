@@ -15,6 +15,13 @@ const userWelcome = document.getElementById('user-welcome');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded');
+    console.log('Elements check:');
+    console.log('- loadingScreen:', document.getElementById('loading-screen'));
+    console.log('- authScreen:', document.getElementById('auth-screen'));
+    console.log('- loginForm:', document.getElementById('login-form'));
+    console.log('- registerForm:', document.getElementById('register-form'));
+    
     initializeApp();
     setupEventListeners();
 });
@@ -61,10 +68,24 @@ function showMainApp() {
 
 // Setup event listeners
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    console.log('Login form:', loginForm);
+    console.log('Register form:', registerForm);
+    
     // Authentication forms
-    loginForm.addEventListener('submit', handleLogin);
-    registerForm.addEventListener('submit', handleRegister);
-    logoutBtn.addEventListener('click', handleLogout);
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+        console.log('Login form event listener added');
+    }
+    
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
+        console.log('Register form event listener added');
+    }
+    
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
 
     // Navigation
     document.querySelectorAll('.nav-button').forEach(button => {
@@ -161,12 +182,16 @@ async function handleLogin(e) {
 
 async function handleRegister(e) {
     e.preventDefault();
+    alert('Registration form submitted!'); // Debug alert
+    
     const formData = new FormData(registerForm);
     const userData = {
         username: formData.get('username'),
         email: formData.get('email'),
         password: formData.get('password')
     };
+    
+    console.log('Registration data:', userData);
 
     try {
         const response = await fetch('/api/auth/register', {
@@ -178,6 +203,7 @@ async function handleRegister(e) {
         });
 
         const data = await response.json();
+        console.log('Registration response:', data);
 
         if (response.ok) {
             authToken = data.token;
@@ -186,9 +212,11 @@ async function handleRegister(e) {
             localStorage.setItem('fitness_user', JSON.stringify(currentUser));
             showMainApp();
         } else {
+            console.error('Registration failed:', data.error);
             showMessage(data.error || 'Hmm, there was an issue creating your account. Try again!', 'error');
         }
     } catch (error) {
+        console.error('Registration error:', error);
         showMessage('Oops! Connection issue. Please try again in a moment.', 'error');
     }
 }

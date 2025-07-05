@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Registration</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        input { padding: 8px; width: 200px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .message { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <h1>Test Registration</h1>
+    <form id="test-form">
+        <div class="form-group">
+            <label>Username:</label><br>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label>Email:</label><br>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label>Password:</label><br>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Register</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('test-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const userData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+            
+            console.log('Submitting:', userData);
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                const resultDiv = document.getElementById('result');
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="message success">Registration successful!</div>';
+                    console.log('Success!', data);
+                } else {
+                    resultDiv.innerHTML = `<div class="message error">Error: ${data.error}</div>`;
+                    console.log('Error:', data.error);
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                document.getElementById('result').innerHTML = '<div class="message error">Network error!</div>';
+            }
+        });
+    </script>
+</body>
+</html>
