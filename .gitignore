@@ -54,3 +54,4 @@ temp/
 # Package manager files
 package-lock.json.bak
 yarn.lock
+.vercel

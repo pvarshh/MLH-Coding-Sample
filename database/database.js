@@ -164,13 +164,21 @@ class Database {
                 is_active BOOLEAN DEFAULT FALSE,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
-        `);
-
-        // Initialize first season
-        this.db.run(`
-            INSERT OR IGNORE INTO leaderboard_seasons (season_name, start_date, end_date, is_active)
-            VALUES ('Season 1', '2025-01-01', '2025-12-31', TRUE)
-        `);
+        `, (err) => {
+            if (err) {
+                console.error('Error creating leaderboard_seasons table:', err);
+            } else {
+                // Initialize first season after table is created
+                this.db.run(`
+                    INSERT OR IGNORE INTO leaderboard_seasons (season_name, start_date, end_date, is_active)
+                    VALUES ('Season 1', '2025-01-01', '2025-12-31', TRUE)
+                `, (err) => {
+                    if (err) {
+                        console.error('Error initializing first season:', err);
+                    }
+                });
+            }
+        });
     }
 
     populateExerciseTemplates() {
